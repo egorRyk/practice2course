@@ -1,0 +1,109 @@
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+const double EPS = 1e-9;
+const int MAX_SIZE = 10;
+
+void printSystem(double matrix[MAX_SIZE][MAX_SIZE + 1], int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cout << matrix[i][j] << " ";
+        }
+        cout << "| " << matrix[i][n] << endl;
+    }
+    cout << endl;
+}
+
+int main() {
+    setlocale(0, "ru");
+    int n;
+    double matrix[MAX_SIZE][MAX_SIZE + 1] = { 0 };
+
+    while (true) {
+        cout << "Введите количество уравнений (1-" << MAX_SIZE << "): ";
+        cin >> n;
+        if (cin.good() && n > 0 && n <= MAX_SIZE) break;
+        cout << "Ошибка! Введите число от 1 до " << MAX_SIZE << endl;
+        cin.clear();
+        cin.ignore(10000, '\n');
+    }
+
+    cout << "Введите коэффициенты системы (по строкам):\n";
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j <= n; j++) {
+            while (true) {
+                cin >> matrix[i][j];
+                if (cin.good()) break;
+                cout << "Ошибка! Введите число: ";
+                cin.clear();
+                cin.ignore(10000, '\n');
+            }
+        }
+    }
+
+    cout << "\nИсходная система:\n";
+    printSystem(matrix, n);
+
+    for (int col = 0; col < n; col++) {
+        int max_row = col;
+        for (int i = col + 1; i < n; i++) {
+            if (abs(matrix[i][col]) > abs(matrix[max_row][col])) {
+                max_row = i;
+            }
+        }
+
+        if (max_row != col) {
+            swap(matrix[col], matrix[max_row]);
+            cout << "Меняем строки " << col + 1 << " и " << max_row + 1 << ":\n";
+            printSystem(matrix, n);
+        }
+
+        if (abs(matrix[col][col]) < EPS) {
+            cout << "Система вырождена!\n";
+        }
+
+        for (int j = n; j >= col; j--) {
+            matrix[col][j] /= matrix[col][col];
+        }
+
+        cout << "Нормализуем строку " << col + 1 << ":\n";
+        printSystem(matrix, n);
+
+        for (int i = col + 1; i < n; i++) {
+            double factor = matrix[i][col];
+            for (int j = col; j <= n; j++) {
+                matrix[i][j] -= factor * matrix[col][j];
+            }
+            cout << "Обнуляем строку " << i + 1 << ":\n";
+            printSystem(matrix, n);
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        bool all_zero = true;
+        for (int j = 0; j < n; j++) {
+            if (abs(matrix[i][j]) > EPS) {
+                all_zero = false;
+                break;
+            }
+        }
+        if (all_zero && abs(matrix[i][n]) > EPS) {
+            cout << "Нет решений!\n";
+        }
+    }
+
+    double solution[MAX_SIZE] = { 0 };
+    for (int i = n - 1; i >= 0; i--) {
+        solution[i] = matrix[i][n];
+        for (int j = i + 1; j < n; j++) {
+            solution[i] -= matrix[i][j] * solution[j];
+        }
+    }
+
+    cout << "Решение системы:\n";
+    for (int i = 0; i < n; i++) {
+        cout << "x" << i + 1 << " = " << solution[i] << endl;
+    }
+
+}
